@@ -1,4 +1,4 @@
-This is code for reproducing the simulated experiments in the paper, "Learning Manipulation Skills Via Hierarchical Spatial Attention", by Marcus Gualtieri and Robert Platt. See my website, http://www.ccs.neu.edu/home/mgualti for details.
+This is code for reproducing the simulated experiments in the paper, "Learning Manipulation Skills Via Hierarchical Spatial Attention", by Marcus Gualtieri and Robert Platt. See my website, http://www.ccs.neu.edu/home/mgualti for details. The code is similar to that in the earlier 6-DoF version, https://github.com/mgualti/DeepRLManip, but this version is much faster and should be easier to get started with.
 
 Getting started:
 1) Pick a domain. From simplest to most complex: "Tabular Pegs on Disks", "Upright Pegs on Disks", "Pegs on Disks", and "Bottles on Coasters".
