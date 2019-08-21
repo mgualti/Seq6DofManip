@@ -8,7 +8,7 @@ Getting started:
 5) In the parameter file, adjust the visualization/plotting parameters to see if the simulation is working.
 
 Highlights:
-- Grasp and place checks, including the antipodal conditition are in the rl_environment_[domain].py class.
+- Grasp and place checks, including the antipodal conditition, are in the rl_environment_[domain].py.
 - HSA is implemented in the files starting with rl_agent.
 
 Data:
