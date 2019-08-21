@@ -1,0 +1,33 @@
+<Environment>
+  <camtrans>2.342292 -0.010964 1.274607</camtrans>
+  <camrotationaxis>-0.632801 -0.637260 0.439843 133.017091</camrotationaxis>
+  
+  <!-- Added a floating hand: need to attach sensor to this object. -->
+  <Robot name="FloatingHand">
+     
+    <KinBody file="basic_gripper_85.xml"/>
+    <Translation>0.0 0.0 0.50</Translation>
+    
+    <Manipulator name="gripper">
+        <base>gripper_base</base>
+        <effector>gripper_base</effector>
+        <closingdirection>-1</closingdirection>
+        <direction>0 0 1</direction>
+    </Manipulator>
+    
+  </Robot>
+  
+  <!-- Table -->
+  <KinBody name="table">
+    <Body type="static">
+      <Translation>0 0 0</Translation>
+      <Geom type="box">
+        <extents>2.5 2.5 0.005</extents>
+        <translation>0 0 -0.005</translation>
+        <diffuseColor>.6 .6 .6</diffuseColor>
+      	<ambientColor>0.6 0.6 0.6</ambientColor>
+      </Geom>
+    </Body>
+  </KinBody>
+
+</Environment>

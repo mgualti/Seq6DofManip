@@ -1,0 +1,10 @@
+python/train_sarsa.py train_params 0
+python/train_sarsa.py train_params 1
+python/train_sarsa.py train_params 2
+python/train_sarsa.py train_params 3
+python/train_sarsa.py train_params 4
+python/train_sarsa.py train_params 5
+python/train_sarsa.py train_params 6
+python/train_sarsa.py train_params 7
+python/train_sarsa.py train_params 8
+python/train_sarsa.py train_params 9

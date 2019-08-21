@@ -1,0 +1,10 @@
+python/train.py train_params_l12 0
+python/train.py train_params_l12 1
+python/train.py train_params_l12 2
+python/train.py train_params_l12 3
+python/train.py train_params_l12 4
+python/train.py train_params_l12 5
+python/train.py train_params_l12 6
+python/train.py train_params_l12 7
+python/train.py train_params_l12 8
+python/train.py train_params_l12 9
