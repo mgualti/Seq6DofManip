@@ -4,11 +4,9 @@
 # python
 import sys
 from time import time
-from copy import copy, deepcopy
 # scipy
 from scipy.io import loadmat, savemat
 from numpy.random import seed
-from numpy import array, mean
 # self
 from rl_environment import RlEnvironment
 from rl_agent_td import RlAgentTd

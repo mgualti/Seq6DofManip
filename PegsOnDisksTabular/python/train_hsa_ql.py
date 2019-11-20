@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-'''Trains a tabular hierarchical SE(2) sampling (HSE2S) agent in the peg-in-hole domain.'''
+'''Trains a hierarcical spatial attention (HSA) agent in the tabular pegs on disks domain.'''
 
 # python
 import sys
 from time import time
-from copy import copy, deepcopy
 # scipy
 from scipy.io import loadmat, savemat
 from numpy.random import seed
-from numpy import array, mean
 # self
 from rl_environment import RlEnvironment
-from rl_agent_hvs_mc import RlAgentHvsMc
+from rl_agent_hsa_ql import RlAgentHsaQl
 
 def Main():
   '''Entrypoint to the program.'''
@@ -33,7 +31,7 @@ def Main():
   seed(randomSeed)
 
   # initialize agent
-  agent = RlAgentHvsMc(params)
+  agent = RlAgentHsaQl(params)
   
   if loadQFunction:
     agent.LoadQFunction()
@@ -49,17 +47,17 @@ def Main():
     if episode >= unbiasOnEpisode: epsilon = 0
     
     env = RlEnvironment(params)
+    s = env.GetState()
     
-    observations = []; abstractActions = []; rewards = []
+    a, i, o = agent.GetActionsAndObservations(s, epsilon)
+
     for t in xrange(tMax):
-      s = env.GetState()
-      a, i, o = agent.GetActionsAndObservations(s, epsilon)
       r = env.Transition(a)
-      observations.append(o)
-      abstractActions.append(i)
-      rewards.append(r)
+      ss = env.GetState()
+      aa, ii, oo = agent.GetActionsAndObservations(ss, epsilon)
+      agent.UpdateQFunction(o, i, r, oo)
+      s = ss; a = aa; o = oo; i = ii
       episodeReturn[-1] += r
-    agent.UpdateQFunction(observations, abstractActions, rewards)
 
     print("Episode {}.{} had return {}.".format(realization, episode, episodeReturn[-1]))
     episodeTime.append(time()-startTime)

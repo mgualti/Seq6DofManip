@@ -1,22 +1,17 @@
-'''RL agent implementing hierarchical volume sampling (HVS).'''
+'''RL agent implementing lookahead hierarchical spatial attention (HSA).'''
 
 # python
 import os
 import pickle
-from time import time
-from copy import copy
 # scipy
 from numpy.random import rand, randint
-from numpy import argmax, array, ceil, cos, cross, delete, dot, eye, floor, hstack, log2, nonzero, \
-  ones, pi, ravel_multi_index, sin, tile, vstack, unravel_index, where, zeros
+from numpy import delete, floor, log2, ravel_multi_index, unravel_index
 # drawing
-from matplotlib import pyplot
-from skimage.draw import ellipse_perimeter, line
 # self
 
 # AGENT ============================================================================================
 
-class RlAgentHvsLookahead:
+class RlAgentHsaLookahead:
 
   def __init__(self, params):
     '''Initializes the agent with an optimistic policy.

@@ -1,14 +1,9 @@
-'''One sense level of the hierarchical sampling agent.'''
+'''One sense level of the HSA agent.'''
 
 # python
 from copy import copy
-from time import time
 # scipy
-from numpy.linalg import norm
-from numpy.random import choice, rand, randint, uniform
-from numpy import any, argmax, argmin, argsort, array, concatenate, eye, exp, hstack, linspace, \
-  logical_and, isinf, meshgrid, ones, repeat, reshape, round, sqrt, stack, tile, where, \
-  unravel_index, vstack, zeros
+from numpy import array, concatenate, eye, linspace, meshgrid, stack, zeros
 # self
 from hand_descriptor import HandDescriptor
 from rl_agent_level import RlAgentLevel
@@ -24,10 +19,6 @@ class RlAgentLevel0(RlAgentLevel):
 
     # other internal variables
     self.SetInitialDescriptor()
-    self.imW = self.initDesc.imW
-    self.imD = self.initDesc.imD
-    self.selD = self.initDesc.imD
-    self.selW = self.initDesc.imW
     
     # initialization
     self.actionsInHandFrame = self.SampleActions()
@@ -55,7 +46,7 @@ class RlAgentLevel0(RlAgentLevel):
     
     # generate input image
     targImage = prevDesc.GenerateHeightmap(rlEnv)
-    handImage = zeros((self.imP, self.imP, 0)) if hand is None else hand.image
+    handImage = zeros((self.imP, self.imP, 0), dtype='float32') if hand is None else hand.image
     o = concatenate((targImage, handImage), axis = 2)
 
     # decide which location in the image to zoom into
@@ -64,7 +55,7 @@ class RlAgentLevel0(RlAgentLevel):
     # compose result
     T = copy(prevDesc.T)
     T[0:3, 3] = self.actionsInHandFrame[bestIdx] + prevDesc.center
-    desc = HandDescriptor(T, self.params)
+    desc = HandDescriptor(T, self.imP, self.imDNext, self.imWNext)
     a = bestIdx
 
     return o, a, desc, bestValue, epsilon
@@ -72,11 +63,6 @@ class RlAgentLevel0(RlAgentLevel):
   def SetInitialDescriptor(self):
     '''Sets the center of the initial descriptor to the provided center.'''
     
-    W = 0.36
-    D = self.params["objHeight"][1] + 0.0375  
-    
     T = eye(4)
-    T[0:3, 3] = array([0, 0, D / 2.0])
-    self.initDesc = HandDescriptor(T, self.params)
-    self.initDesc.imW = W
-    self.initDesc.imD = D    
+    T[0:3, 3] = array([0, 0, self.imD / 2.0])
+    self.initDesc = HandDescriptor(T, self.imP, self.imD, self.imW)

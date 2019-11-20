@@ -1,4 +1,4 @@
-'''Class and utilities for one level of a HSENS agent.'''
+'''Class and utilities for one level of an HSA agent.'''
 
 # python
 import os
@@ -15,7 +15,6 @@ from numpy import argmax, arange, array, concatenate, empty, exp, eye, flipud, f
 import tensorflow
 from tensorflow import keras
 # self
-from hand_descriptor import HandDescriptor
 
 # AGENT ============================================================================================
 
@@ -39,7 +38,14 @@ class RlAgentLevel():
     self.modelFolder = params["modelFolder"]
     self.nEpochs = params["nEpochs"]
     self.batchSize = params["batchSize"]
+    
     self.imP = params["imP"]
+    self.imD = params["imD"][level]
+    self.imW = params["imW"][level]
+    self.imDNext = params["imD"][level + 1]
+    self.imWNext = params["imW"][level + 1]
+    self.selD = params["selD"][level]
+    self.selW = params["selW"][level]
     
     # initialize
     
@@ -50,9 +56,9 @@ class RlAgentLevel():
       self.experiences.append([])
       self.Q.append(self.GenerateNetworkModel(i == 0))
     
-    self.outputShape = (int(self.Q[0].outputs[0].shape[1]), \
-                        int(self.Q[0].outputs[0].shape[2]), \
-                        int(self.Q[0].outputs[0].shape[3]))
+    self.outputShape = (int(self.Q[0][1].outputs[0].shape[1]), \
+                        int(self.Q[0][1].outputs[0].shape[2]), \
+                        int(self.Q[0][1].outputs[0].shape[3]))
     print("Level {} has {} outputs.".format(self.level, self.outputShape))
     self.nActionSamples = self.outputShape[0] * self.outputShape[1] * self.outputShape[2]
 
@@ -77,7 +83,7 @@ class RlAgentLevel():
     
     idx = 0 if self.IsGraspImage(image) else 1
     dummyIn = zeros((1, 1, 4), dtype='int32')
-    values, dummyOut = self.Q[idx].predict([array([image]), dummyIn])
+    values = self.Q[idx][1].predict([array([image]), dummyIn])
     return squeeze(values)
 
   def GenerateNetworkModel(self, graspNetwork):
@@ -114,9 +120,14 @@ class RlAgentLevel():
       kernel_size=params["conv4KernelSize"][self.level], \
       strides=params["conv4Stride"][self.level], padding="same", \
       kernel_regularizer=keras.regularizers.l2(weightDecay))(h1)
+    h1 = keras.layers.Conv2D(params["conv5Outputs"][self.level], \
+      kernel_size=params["conv5KernelSize"][self.level], \
+      strides=params["conv5Stride"][self.level], padding="same", \
+      kernel_regularizer=keras.regularizers.l2(weightDecay))(h1)
     h2 = keras.layers.Lambda(lambda inputs: \
       tensorflow.gather_nd(inputs[0], inputs[1]))([h1, in2])
-    Q = keras.Model(inputs=[in1, in2], outputs=[h1, h2])
+    Qtrain = keras.Model(inputs=[in1, in2], outputs=h2)
+    Qtest = keras.Model(inputs=[in1, in2], outputs=h1)
 
     # optimization
 
@@ -129,13 +140,13 @@ class RlAgentLevel():
     else:
       raise Exception("Unsupported optimizer {}.".format(optimizer))
 
-    Q.compile(optimizer=optimizer, loss=[None, "MSE"], loss_weights=[None, 1.0], metrics=[])
+    Qtrain.compile(optimizer=optimizer, loss="MSE")
     
     #typeString = "grasp" if graspNetwork else "place"
     #print("Summary of {} Q-function for level {}:".format(typeString, self.level))
-    #Q.summary()
+    #Qtrain.summary()
     
-    return Q
+    return Qtrain, Qtest
 
   def GetNumberOfExperiences(self):
     '''Returns the number of entries in the experience replay database currently in memory at this level.'''
@@ -185,11 +196,10 @@ class RlAgentLevel():
     
     directory = os.getcwd() + "/tensorflow/" + self.modelFolder
     
-    self.Q = []
     for i in xrange(2):
       act = "grasp" if i == 0 else "place"
       path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-      self.Q.append(keras.models.load_model(path))
+      self.Q[i][0].load_weights(path)
       print("Loaded Q-function " + path + ".")
 
   def PlotImages(self, o, a):
@@ -328,7 +338,7 @@ class RlAgentLevel():
     for i in xrange(2):
       act = "grasp" if i == 0 else "place"
       path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-      self.Q[i].save(path)
+      self.Q[i][0].save_weights(path)
       print("Saved Q-function " + path + ".")
 
   def SelectIndexEpsilonGreedy(self, image, unbias):
@@ -382,7 +392,7 @@ class RlAgentLevel():
       for j in xrange(inputs2[i].shape[0]):
         inputs2[i][j, 0, 0] = j % self.batchSize
       # fit
-      history = self.Q[i].fit([inputs1[i], inputs2[i]], labels[i], \
+      history = self.Q[i][0].fit([inputs1[i], inputs2[i]], labels[i], \
         epochs=self.nEpochs, batch_size=self.batchSize, shuffle=False)
       # accumulate loss
       nBatches = floor(labels[i].shape[0] / self.batchSize)

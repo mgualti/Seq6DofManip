@@ -1,15 +1,10 @@
 #!/usr/bin/env python
-'''Parameters for an Monte Carlo HSE2S agent for the pegs on disks task.'''
-
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+'''Parameters for lookahead HSA agent for the upright pegs on disks task.'''
 
 # python
 import os
 # scipy
-from scipy.io import loadmat, savemat
-from numpy.random import choice, normal, uniform
+from scipy.io import savemat
   
 def Parameters(realization):
   '''Specifies simulation hyperparameters.'''
@@ -20,43 +15,48 @@ def Parameters(realization):
   cwd = os.getcwd()
   deviceId = 1 if "Seq6DofManip2" in cwd else (0 if "Seq6DofManip1" in cwd else -1)
   randomSeed = realization
-  modelFolder = "pegs-on-disks"
+  modelFolder = "models"
   
   # curriculum
   tMax = 4
-  nEpisodes = 100000
+  nEpisodes = 80000
   trainEvery = 1000
   maxExperiences = 50000
   epsilonMin = 0.04
-  unbiasOnEpisode = 0.95 * nEpisodes
+  unbiasOnEpisode = nEpisodes - 5000
   
   # misc
   gamma = 0.00
   nLevels = 3
-  actionSpaceSize = [[5, 5, 5], [5, 5, 5], [5, 5, 5]]
+  actionSpaceSize = [[4, 4, 4], [4, 4, 4], [4, 4, 4]]
 
   # hand descriptor
-  imP = 32
-  imD = 0.2375 # 2 * maxObjectHeight + halfHandDepth
-  imW = 0.09
+  imP =  64
+  imD =  [0.2375, 0.2375, 0.2375, 0.2375] # 2 * maxObjectHeight + halfHandDepth
+  imW =  [0.9000, 0.0900, 0.0900, 0.0900]
+  selD = [0.1375, 0.0900, 0.0225]
+  selW = [0.3600, 0.0900, 0.0225]
 
   # network parametrs (per level)
-  conv1KernelSize = [8, 8, 8]
-  conv1Outputs = [32, 32, 32]
-  conv1Stride = [4, 4, 4]
-  conv2KernelSize = [4, 4, 4]
-  conv2Outputs = [64, 64, 64]
-  conv2Stride = [2, 2, 2]
-  conv3KernelSize = [3, 3, 3]
-  conv3Outputs = [32, 32, 32]
-  conv3Stride = [2, 2, 2]
-  conv4KernelSize = [2, 2, 2]
-  conv4Stride = [2, 2, 2]
+  conv1KernelSize = [ 7,  7,  7]
+  conv1Outputs =    [32, 32, 32]
+  conv1Stride =     [ 4,  4,  4]
+  conv2KernelSize = [ 7,  7,  7]
+  conv2Outputs =    [64, 64, 64]
+  conv2Stride =     [ 2,  2,  2]
+  conv3KernelSize = [ 7,  7,  7]
+  conv3Outputs =    [32, 32, 32]
+  conv3Stride =     [ 2,  2,  2]
+  conv4KernelSize = [ 7,  7,  7]
+  conv4Outputs =    [32, 32, 32]
+  conv4Stride =     [ 2,  2,  2]  
+  conv5KernelSize = [ 2,  2,  2]
+  conv5Stride =     [ 2,  2,  2]
 
   # optimization parametrs
   nEpochs = 1
   batchSize = 64
-  weightDecay = 0.0001
+  weightDecay = 0.00015
   baseLearningRate = 0.0001
   optimizer = "Adam"  
 

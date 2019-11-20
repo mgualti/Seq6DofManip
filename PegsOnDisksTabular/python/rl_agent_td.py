@@ -1,12 +1,8 @@
 '''RL agnet implementing temporal difference (TD) algorithms operating on the underlying state.'''
 
 # python
-from time import time
-from copy import copy
 # scipy
-from numpy.random import rand, randint
-from numpy import argmax, array, ceil, cos, cross, dot, eye, hstack, log2, nonzero, ones, pi, \
-  ravel_multi_index, sin, sort, tile, vstack, unravel_index, where, zeros
+from numpy.random import randint
 # self
 
 # AGENT ============================================================================================
@@ -41,11 +37,14 @@ class RlAgentTd:
     # reached terminal state
     if s is None: return None
     
+    # decompose state information    
+    t = s[-1]    
+    
     # take best action, breaking ties randomly
     bestValue = -float('inf'); actions = None
     for action in xrange(self.nActions):
       idx = s + (action, )
-      if idx not in self.Q: self.Q[idx] = self.initQ
+      if idx not in self.Q: self.Q[idx] = self.initQ[t]
       if self.Q[idx] > bestValue:
         bestValue = self.Q[idx]
         actions = [action]
@@ -54,6 +53,11 @@ class RlAgentTd:
     
     # break ties randomly
     return actions[randint(len(actions))]
+    
+  def GetQTableSize(self):
+    '''Returns the number of Q-values stored in the lookup table.'''
+    
+    return len(self.Q)
 
   def UpdateQFunction(self, s, a, r, ss, aa):
     '''Updates the current q-estimates, according to the Sarsa update rule, given a time step of

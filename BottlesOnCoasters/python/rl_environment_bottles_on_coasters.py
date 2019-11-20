@@ -329,9 +329,9 @@ class RlEnvironmentBottlesOnCoasters(RlEnvironment):
       folderName = self.supportObjectFolder
       fileNames = self.supportObjectFileNames
     else:
-     nObjects = self.nObjects
-     folderName = self.objectFolder
-     fileNames = self.objectFileNames
+      nObjects = self.nObjects
+      folderName = self.objectFolder
+      fileNames = self.objectFileNames
 
     # select file(s)
     fileIdxs = choice(len(fileNames), size=nObjects, replace=False)
@@ -363,7 +363,7 @@ class RlEnvironmentBottlesOnCoasters(RlEnvironment):
       
       # select pose for object
       for j in xrange(maxPlaceAttempts):
-
+        
         # choose orientation
         if isSupportObjects:
           R = eye(4)
@@ -394,7 +394,7 @@ class RlEnvironmentBottlesOnCoasters(RlEnvironment):
           uniform(workspace[1][0], workspace[1][1])])
         
         # set height
-        z = abs(body.workspace[downAxis]) + self.GetTableHeight()
+        z = abs(body.workspace[downAxis]) + self.GetTableHeight() + 0.001
         
         # set transform
         T = eye(4)

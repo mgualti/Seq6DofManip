@@ -1,4 +1,4 @@
-'''Class and utilities for an HVS agent.'''
+'''Class and utilities for an HSA agent.'''
 
 # python
 import os
@@ -51,14 +51,6 @@ class RlAgent():
     self.senseAgents.append(RlAgentLevel2(2, params))
     self.senseAgents.append(RlAgentLevel3(3, params))
     self.nLevels = len(self.senseAgents)
-
-    # set up logging
-
-    self.tfLogDir = os.getcwd() + "/tensorflow/logs"
-    if os.path.exists(self.tfLogDir):
-      shutil.rmtree(self.tfLogDir)
-
-    tensorflow.summary.FileWriter(self.tfLogDir, keras.backend.get_session().graph)
 
   def AddExperienceMonteCarlo(self, observations, actions, rewards):
     '''Adds an experience, everything needed for a Monte Carlo update, to the agent's replay database.

@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-'''Trains a tabular hierarchical SE(2) sampling (HSE2S) agent in the peg-in-hole domain.'''
+'''Trains a hierarchical spatial attention (HSA) agent in the tabular pegs on disks domain.'''
 
 # python
 import sys
 from time import time
-from copy import copy, deepcopy
 # scipy
 from scipy.io import loadmat, savemat
 from numpy.random import seed
-from numpy import array, mean
 # self
 from rl_environment import RlEnvironment
-from rl_agent_hvs import RlAgentHvs
+from rl_agent_hsa import RlAgentHsa
 
 def Main():
   '''Entrypoint to the program.'''
@@ -34,7 +32,7 @@ def Main():
   seed(randomSeed)
 
   # initialize agent
-  agent = RlAgentHvs(params)
+  agent = RlAgentHsa(params)
   
   if loadQFunction:
     agent.LoadQFunction()

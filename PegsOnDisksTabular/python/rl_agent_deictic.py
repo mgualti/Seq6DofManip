@@ -1,17 +1,11 @@
-'''RL agent implementing hierarchical volume sampling (HVS).'''
+'''RL agent implementing Deictic Image Mapping.'''
 
 # python
 import os
 import pickle
-from time import time
-from copy import copy
 # scipy
 from numpy.random import rand, randint
-from numpy import argmax, array, ceil, cos, cross, delete, dot, eye, hstack, log2, nonzero, ones, \
-  pi, ravel_multi_index, sin, tile, vstack, unravel_index, where, zeros
 # drawing
-from matplotlib import pyplot
-from skimage.draw import ellipse_perimeter, line
 # self
 
 # AGENT ============================================================================================
@@ -41,7 +35,12 @@ class RlAgentDeictic:
     self.Q = {None:0.0}
     
   def GetAbstractAction(self, a, pegs, disks):
-    '''TODO'''
+    '''Generates abstract action, as seen by the agent.
+    - Input a: An integer indicating the location on the m^3 grid.
+    - Input pegs: List of pegs in the grid.
+    - Input disks: List of disks in the grid.
+    - Returns: The abstract action, indicating if the selected cell has a peg, a disk, or both.
+    '''
     
     return (a in pegs, a in disks)
   

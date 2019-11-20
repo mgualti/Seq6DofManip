@@ -13,7 +13,7 @@ from numpy import arange, arccos, arctan, arctan2, array, ascontiguousarray, cei
 
 class HandDescriptor():
 
-  def __init__(self, T, params):
+  def __init__(self, T, imP, imD, imW):
     '''Creates a HandDescriptor object with everything needed.'''
 
     self.T = T
@@ -24,9 +24,9 @@ class HandDescriptor():
     self.height = 0.01
 
     # image size (used for image descriptor)
-    self.imP = params["imP"]
-    self.imD = params["imD"]
-    self.imW = params["imW"]
+    self.imP = imP
+    self.imD = imD
+    self.imW = imW
 
     # hand axes
     self.axis = T[0:3, 0]
@@ -52,7 +52,7 @@ class HandDescriptor():
     cornerYi = (self.center[1] / dxy) - ((self.imP - 1.0) / 2.0)
     value = 0.50 + ((env.tablePosition[2] + env.tableExtents[2]) - self.center[2]) / self.imD
     value = min(max(0.0, value), 1.0)
-    self.image = value * ones((self.imP, self.imP, 1))
+    self.image = value * ones((self.imP, self.imP, 1), dtype='float32')
 
     # for each object, compute relevant image indices
     objects = env.objects + env.supportObjects

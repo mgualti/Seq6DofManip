@@ -1,18 +1,9 @@
-'''Class and utilities for an HSE2S agent. Manages several levels of type RlAgentSenseLevel2d.'''
+'''Class and utilities for lookahead HSA agent. Manages several levels of type RlAgentLookaheadLevel.'''
 
 # python
 import os
-import shutil
-from copy import copy
-from time import time
 # scipy
-from matplotlib import pyplot
-from numpy.random import choice, permutation, rand, randint
-from numpy import argmax, arange, array, cumsum, exp, fliplr, flipud, logical_not, isinf, mean, \
-  pi, reshape, stack, where, zeros
 # tensorflow
-import tensorflow
-from tensorflow import keras
 # self
 from rl_agent_lookahead_level_0 import RlAgentLookaheadLevel0
 from rl_agent_lookahead_level_1 import RlAgentLookaheadLevel1
@@ -51,14 +42,6 @@ class RlAgentLookahead():
       self.senseAgents.append(RlAgentLookaheadLevel1(1, params))
     if self.nLevels > 2:
       self.senseAgents.append(RlAgentLookaheadLevel2(2, params))
-
-    # set up logging
-
-    self.tfLogDir = os.getcwd() + "/tensorflow/logs"
-    if os.path.exists(self.tfLogDir):
-      shutil.rmtree(self.tfLogDir)
-
-    tensorflow.summary.FileWriter(self.tfLogDir, keras.backend.get_session().graph)
 
   def AddExperienceMonteCarlo(self, observations, rewards):
     '''TODO'''

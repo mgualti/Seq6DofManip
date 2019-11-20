@@ -9,13 +9,13 @@ from scipy.io import loadmat
 from scipy.spatial import cKDTree
 from numpy.linalg import inv, norm
 from numpy.random import choice, rand, randint, randn, uniform
-from numpy import array, cos, cross, dot, eye, hstack, ones, pi, sin, tile, vstack, zeros
+from numpy import array, asscalar, cos, cross, dot, eye, hstack, ones, pi, sin, tile, vstack, zeros
 # openrave
 import openravepy
 # self
 import point_cloud
 
-class RlEnvironment:
+class RlEnvironment(object):
 
   def __init__(self, params):
     '''Initializes openrave environment, etc.'''
@@ -62,7 +62,7 @@ class RlEnvironment:
     self.tableObj = self.env.GetKinBody("table")
     self.tablePosition = self.tableObj.GetTransform()[0:3, 3]
     self.tableExtents = self.tableObj.ComputeAABB().extents()
-    self.tableHeight = self.tablePosition[2] + self.tableExtents[2] / 2.0
+    self.tableHeight = asscalar(self.tablePosition[2] + self.tableExtents[2])
     if params["removeTable"]:
       self.env.Remove(self.tableObj)
 
@@ -123,6 +123,27 @@ class RlEnvironment:
     body.SetName(name)
     body.height = height
     body.radius = radius
+    self.env.Add(body, True)
+    
+    # save mesh file
+    self.env.Save(name + ".dae", openravepy.Environment.SelectionOptions.Body, name)
+    print("Saved " + name + ".dae.")
+    
+    return body
+    
+  def GenerateBoxMesh(self, extentsMin, extentsMax, name):
+    '''TODO'''
+    
+    # create object
+    extents = uniform(extentsMin, extentsMax, 3)
+    geomInfo = openravepy.KinBody.Link.GeometryInfo()
+    geomInfo._type = openravepy.KinBody.Link.GeomType.Box
+    geomInfo._vGeomData = [extents[0] / 2.0, extents[1] / 2.0, extents[2] / 2.0]    
+    geomInfo._vDiffuseColor = self.colors[randint(len(self.colors))]
+    body = openravepy.RaveCreateKinBody(self.env, "")
+    body.InitFromGeometries([geomInfo])
+    body.SetName(name)
+    body.extents = extents
     self.env.Add(body, True)
     
     # save mesh file
@@ -228,17 +249,6 @@ class RlEnvironment:
     '''Accessor method for the table height -- the z position of the top of the table surface.'''
     
     return self.tableHeight
-
-  def MoveHandToHoldingPose(self):
-    '''Moves the hand to a special, pre-designated holding area.'''
-
-    T = eye(4)
-    T[0:3, 0] = array([-1, 0,  0])
-    T[0:3, 1] = array([ 0, 1,  0])
-    T[0:3, 2] = array([ 0, 0, -1])
-    T[0:3, 3] = array([-1, 0,  0.30])
-
-    self.MoveHandToPose(T)
 
   def MoveHandToHoldingPose(self):
     '''Moves the hand to a special, pre-designated holding area.'''

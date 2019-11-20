@@ -1,30 +1,23 @@
-'''Same as the HVS agent but with limited sensing capabilities.'''
+'''Same as the HSA agent but with limited sensing capabilities.'''
 
 # python
-import os
-import pickle
-from time import time
-from copy import copy
 # scipy
 from numpy.random import rand, randint
-from numpy import argmax, array, ceil, cos, cross, delete, dot, eye, hstack, log2, nonzero, ones, \
-  pi, ravel_multi_index, sin, tile, vstack, unravel_index, where, zeros
+from numpy import ravel_multi_index, unravel_index
 # drawing
-from matplotlib import pyplot
-from skimage.draw import ellipse_perimeter, line
 # self
-from rl_agent_hvs import RlAgentHvs
+from rl_agent_hsa import RlAgentHsa
 
 # AGENT ============================================================================================
 
-class RlAgentHvsLimitedSensor(RlAgentHvs):
+class RlAgentHsaLimitedSensor(RlAgentHsa):
 
   def __init__(self, params):
     '''Initializes the agent with an optimistic policy.
     - Input params: System parameters data structure.
     '''
     
-    RlAgentHvs.__init__(self, params)
+    RlAgentHsa.__init__(self, params)
 
   def GetActionsAndObservations(self, s, epsilon):
     '''Gets a list of actions, abstract actions, and observations for each level in the sense sequence.

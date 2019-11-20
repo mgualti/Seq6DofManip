@@ -1,4 +1,4 @@
-'''Class and utilities for one level of a HSENS agent.'''
+'''Class and utilities for one level of an HSA agent.'''
 
 # python
 import os
@@ -20,7 +20,6 @@ from tensorflow import keras
 # openrave
 import openravepy
 # self
-from hand_descriptor import HandDescriptor
 
 # AGENT ============================================================================================
 
@@ -57,8 +56,8 @@ class RlAgentLevel():
     self.Q = self.GenerateNetworkModel(isGrasp)
     
     shape = []
-    for i in xrange(1, len(self.Q.outputs[0].shape)):
-      shape.append(int(self.Q.outputs[0].shape[i]))
+    for i in xrange(1, len(self.Q[1].outputs[0].shape)):
+      shape.append(int(self.Q[1].outputs[0].shape[i]))
     self.outputShape = tuple(shape)
     self.nActionSamples = prod(self.outputShape)
     
@@ -83,9 +82,8 @@ class RlAgentLevel():
     - Return values: Values, one for each action, approximating the q-values.
     '''
     
-    dummyIn = zeros((1, 1, 2), dtype='int32') if self.isOrient else \
-      zeros((1, 1, 4), dtype='int32')
-    values, _ = self.Q.predict([array([image]), dummyIn])
+    dummyIn = zeros((1, 1, 2), dtype='int32') if self.isOrient else zeros((1, 1, 4), dtype='int32')
+    values = self.Q[1].predict([array([image]), dummyIn])
     return squeeze(values)
     
   def EvaluateActionsMultiple(self, images):
@@ -94,7 +92,7 @@ class RlAgentLevel():
     batchSize = len(images)
     dummyIn = zeros((batchSize, 1, 2), dtype='int32') if self.isOrient else \
       zeros((batchSize, 1, 4), dtype='int32')
-    values, _ = self.Q.predict([array(images), dummyIn])
+    values = self.Q.predict([array(images), dummyIn])
     return squeeze(values)
 
   def GenerateNetworkModel(self, graspNetwork):
@@ -134,9 +132,9 @@ class RlAgentLevel():
       h1 = keras.layers.Conv2D(params["conv4Outputs"], kernel_size=params["conv4KernelSize"], \
         strides=params["conv4Stride"], padding="same", \
         kernel_regularizer=keras.regularizers.l2(weightDecay))(h1)
-    h2 = keras.layers.Lambda(lambda inputs: \
-      tensorflow.gather_nd(inputs[0], inputs[1]))([h1, in2])
-    Q = keras.Model(inputs=[in1, in2], outputs=[h1, h2])
+    h2 = keras.layers.Lambda(lambda inputs: tensorflow.gather_nd(inputs[0], inputs[1]))([h1, in2])
+    Qtrain = keras.Model(inputs=[in1, in2], outputs=h2)
+    Qtest = keras.Model(inputs=[in1, in2], outputs=h1)
 
     # optimization
 
@@ -149,13 +147,13 @@ class RlAgentLevel():
     else:
       raise Exception("Unsupported optimizer {}.".format(optimizer))
 
-    Q.compile(optimizer=optimizer, loss=[None, "MSE"], loss_weights=[None, 1.0], metrics=[])
+    Qtrain.compile(optimizer=optimizer, loss="MSE")
     
     #typeString = "grasp" if graspNetwork else "place"
     #print("Summary of {} Q-function for level {}:".format(typeString, self.level))
-    #Q.summary()
+    #Qtrain.summary()
     
-    return Q
+    return Qtrain, Qtest
 
   def GetNumberOfExperiences(self):
     '''Returns the number of entries in the experience replay database currently in memory at this level.'''
@@ -194,7 +192,7 @@ class RlAgentLevel():
     
     act = "grasp" if self.isGrasp else "place"
     path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-    self.Q = keras.models.load_model(path)
+    self.Q[0].load_weights(path)
     print("Loaded Q-function " + path + ".")
 
   def PlotImages(self, o, a, desc):
@@ -300,7 +298,7 @@ class RlAgentLevel():
       
     act = "grasp" if self.isGrasp else "place"
     path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-    self.Q.save(path)
+    self.Q[0].save_weights(path)
     print("Saved Q-function " + path + ".")
 
   def SelectIndexEpsilonGreedy(self, image, unbias):
@@ -353,8 +351,8 @@ class RlAgentLevel():
     for i in xrange(inputs2.shape[0]):
       inputs2[i, 0, 0] = i % self.batchSize
     # fit
-    history = self.Q.fit([inputs1, inputs2], labels, \
-      epochs=self.nEpochs, batch_size=self.batchSize, shuffle=False)    
+    history = self.Q[0].fit([inputs1, inputs2], labels, epochs = self.nEpochs, batch_size = \
+      self.batchSize, shuffle = False)    
     # compute average loss
     return mean(history.history["loss"])
     

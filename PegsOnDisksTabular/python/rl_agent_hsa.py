@@ -1,24 +1,19 @@
-'''RL agent implementing hierarchical volume sampling (HVS).'''
+'''RL agent implementing hierarchical spatial attention (HSA).'''
 
 # python
 import os
 import pickle
-from time import time
-from copy import copy
 # scipy
-from numpy.random import rand, randint, uniform
-from numpy import argmax, array, ceil, cos, cross, delete, dot, eye, hstack, linspace, log2, \
-  meshgrid, nonzero, ones, pi, sqrt, ravel_multi_index, sin, tile, vstack, unravel_index, \
-  where, zeros
+from numpy.random import rand, randint
+from numpy import array, delete, log2, meshgrid, ravel_multi_index, reshape, unravel_index, zeros
 # drawing
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
-from skimage.draw import ellipse_perimeter, line
 # self
 
 # AGENT ============================================================================================
 
-class RlAgentHvs:
+class RlAgentHsa:
 
   def __init__(self, params):
     '''Initializes the agent with an optimistic policy.
@@ -196,10 +191,10 @@ class RlAgentHvs:
     '''https://codereview.stackexchange.com/questions/155585/plotting-a-rectangular-prism'''
     
     xx, yy = meshgrid(xMinMax, yMinMax)
-    ax.plot_wireframe(xx, yy, zMinMax[0], color=color)
-    ax.plot_surface(xx, yy, zMinMax[0], color=color, alpha=alpha)
-    ax.plot_wireframe(xx, yy, zMinMax[1], color=color)
-    ax.plot_surface(xx, yy, zMinMax[1], color=color, alpha=alpha)
+    ax.plot_wireframe(xx, yy, reshape(zMinMax[0], (1, 1)), color=color)
+    ax.plot_surface(xx, yy, reshape(zMinMax[0], (1, 1)), color=color, alpha=alpha)
+    ax.plot_wireframe(xx, yy, reshape(zMinMax[1], (1, 1)), color=color)
+    ax.plot_surface(xx, yy, reshape(zMinMax[1], (1, 1)), color=color, alpha=alpha)
     
     yy, zz = meshgrid(yMinMax, zMinMax)
     ax.plot_wireframe(xMinMax[0], yy, zz, color=color)

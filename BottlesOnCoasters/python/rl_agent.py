@@ -1,6 +1,7 @@
-'''Class and utilities for an HVS agent.'''
+'''Class and utilities for an HSA agent.'''
 
 # python
+import gc
 import os
 import shutil
 from copy import copy
@@ -65,14 +66,6 @@ class RlAgent():
     self.placeAgents.append(RlAgentLevelPlace3(params))
     
     self.agents = self.graspAgents + self.placeAgents
-
-    # set up logging
-
-    self.tfLogDir = os.getcwd() + "/tensorflow/logs"
-    if os.path.exists(self.tfLogDir):
-      shutil.rmtree(self.tfLogDir)
-
-    tensorflow.summary.FileWriter(self.tfLogDir, keras.backend.get_session().graph)
 
   def AddExperienceMonteCarlo(self, observations, actions, rewards, isGrasp):
     '''Adds an experience, everything needed for a Monte Carlo update, to the agent's replay database.
@@ -168,7 +161,9 @@ class RlAgent():
 
   def UpdateQFunctionMonteCarlo(self):
     '''Trains each level of the agent using the Monte Carlo update. Use with AddExperienceMonteCarlo.'''
-
+    
+    gc.collect() # necessary because, if low on memory, Tensorflow could crash    
+    
     losses = []
     for agent in self.agents:
       loss = agent.UpdateQFunctionMonteCarlo()

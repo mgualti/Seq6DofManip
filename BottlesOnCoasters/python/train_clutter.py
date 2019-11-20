@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''Trains a Sarsa HSA agent to perform the pegs on disks task.'''
+'''Trains an HSA agent to perform the bottles on coasters task.'''
 
 # uncomment when profiling
 #import os; os.chdir("/home/mgualti/Seq6DofManip/PickAndPlace")
@@ -13,7 +13,7 @@ from numpy.random import seed
 # tensorflow
 import tensorflow
 # self
-from rl_environment_pegs_on_disks import RlEnvironmentPegsOnDisks
+from rl_environment_clutter import RlEnvironmentClutter
 from rl_agent import RlAgent
 
 def Main():
@@ -31,6 +31,9 @@ def Main():
   loadNetwork = params["loadNetwork"]
   loadDatabase = params["loadDatabase"]
   showSteps = params["showSteps"]
+  
+  params["nClutter"] = 3
+  params["clutterObjectFolder"] = "/home/mgualti/Data/Seq6DofManip/Blocks"
 
   # INITIALIZATION =================================================================================
 
@@ -39,7 +42,7 @@ def Main():
   tensorflow.random.set_seed(randomSeed)
 
   # initialize agent and environment
-  rlEnv = RlEnvironmentPegsOnDisks(params)
+  rlEnv = RlEnvironmentClutter(params)
   rlAgent = RlAgent(params)
 
   # if testing, load previous results
@@ -51,8 +54,8 @@ def Main():
 
   # RUN TEST =======================================================================================
 
-  episodeReturn = []; nPlacedObjects = []; episodeTime = []; timeStepEpsilon = [];
-  databaseSize = []; losses = []
+  episodeReturn = []; nPlacedObjects = []; nGraspedObjects = []
+  episodeTime = []; timeStepEpsilon = []; databaseSize = []; losses = []
   
   for episode in xrange(nEpisodes):
 
@@ -60,55 +63,60 @@ def Main():
 
     # place random object in random orientation on table
     rlEnv.MoveHandToHoldingPose()
-    rlEnv.PlaceObjects(False)
-    rlEnv.PlaceObjects(True)
+    rlEnv.PlaceObjects()
     if showSteps: raw_input("Placed objects.")
 
-    R = 0; nPlaced = 0; holdingDesc = None; o = None; a = None; r = None
+    R = 0; nPlaced = 0; nGrasped = 0
+    holdingDesc = None; observations = []; actions = []; rewards = []; isGrasp = []
+    
     for t in xrange(tMax):
       # get a point cloud
       cloud = rlEnv.GetArtificialCloud()
-      isGrasp = holdingDesc is None
+      #rlEnv.PlotCloud(cloud)
+      #if showSteps: raw_input("Acquired cloud.")
+      isGrasp.append(holdingDesc is None)
       # get the next action
-      oo, aa, overtDesc, epsilon = rlAgent.SenseAndAct(
+      o, a, overtDesc, epsilon = rlAgent.SenseAndAct(
         holdingDesc, cloud, t, rlEnv, episode >= unbiasOnEpisode)
       # perform transition
-      holdingDesc, rr = rlEnv.Transition(overtDesc, cloud)
-      # save experience
-      if t > 0: rlAgent.AddExperienceSarsa(o, a, r, oo, aa)
-      o = oo; a = aa; r = rr
-      # save recorded data
+      holdingDesc, r = rlEnv.Transition(overtDesc, cloud)
+      # save experiences
+      timeStepEpsilon.append(epsilon)
+      observations.append(o)
+      actions.append(a)
+      rewards.append(r)
       R += r
-      if isGrasp:
+      # compute task success -- number of objects placed
+      if isGrasp[-1]:
+        if holdingDesc is not None:
+          nGrasped += 1
         if r < 0:
           nPlaced -= 1
       else:
-        if r > 0:
+        if r == 1:
           nPlaced += 1
-      timeStepEpsilon.append(epsilon)
-    
-    # add final experience
-    rlAgent.AddExperienceSarsa(o, a, r, [None]*rlAgent.nLevels, [None]*rlAgent.nLevels)
+          
+    rlAgent.AddExperienceMonteCarlo(observations, actions, rewards, isGrasp)
 
     # cleanup episode
-    rlEnv.ResetEpisode()
     print("Episode {} had return {}".format(episode, R))
 
     # training
     if episode % trainEvery == trainEvery-1:
-      losses.append(rlAgent.UpdateQFunctionSarsa())
+      losses.append(rlAgent.UpdateQFunctionMonteCarlo())
       rlAgent.SaveQFunction()
 
     # save results
     episodeReturn.append(R)
     nPlacedObjects.append(nPlaced)
+    nGraspedObjects.append(nGrasped)
     episodeTime.append(time()-startTime)
     databaseSize.append(rlAgent.GetNumberOfExperiences())
 
     if episode % trainEvery == trainEvery-1 or episode == nEpisodes-1:
       saveData = {"episodeReturn":episodeReturn, "nPlacedObjects":nPlacedObjects,
-        "episodeTime":episodeTime, "timeStepEpsilon":timeStepEpsilon,
-        "databaseSize":databaseSize, "losses":losses}
+        "nGraspedObjects":nGraspedObjects, "episodeTime":episodeTime,
+        "timeStepEpsilon":timeStepEpsilon, "databaseSize":databaseSize, "losses":losses}
       saveData.update(params)
       savemat(saveFileName, saveData)
 

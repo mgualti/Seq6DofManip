@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-'''Default parameters for an HVS agent in the bottles on coasters domain.'''
-
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+'''Default parameters for an HSA agent in the bottles on coasters domain.'''
 
 # python
 import os
@@ -70,8 +66,8 @@ def Parameters(realization):
   # objects
   nObjects = 2
   nSupportObjects = 2
-  objectFolder = "/home/mgualti/Data/RaveObjects/Bottles"
-  supportObjectFolder = "/home/mgualti/Data/RaveObjects/Coasters"
+  objectFolder = "/home/mgualti/Data/Seq6DofManip/Bottles"
+  supportObjectFolder = "/home/mgualti/Data/Seq6DofManip/Coasters"
   graspFrictionCone = 15 # degrees
   graspMinDistFromBottom = 0.04 # meters
   placeOrientTolerance = 3.0 # degrees
@@ -100,7 +96,7 @@ def Parameters(realization):
     loadDatabase = False
     showViewer = True
     showSteps = True
-    plotImages = True
+    plotImages = False
   
   # save parameter file
   savemat("parameters.mat", locals())

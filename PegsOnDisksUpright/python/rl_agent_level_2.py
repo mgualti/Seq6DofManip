@@ -1,4 +1,4 @@
-'''One sense level of the hierarchical sampling agent.'''
+'''One sense level of the HSA agent.'''
 
 # python
 from copy import copy
@@ -6,8 +6,8 @@ from time import time
 # scipy
 from numpy.linalg import norm
 from numpy.random import choice, rand, randint, uniform
-from numpy import any, argmax, argmin, argsort, array, concatenate, eye, exp, hstack, linspace, \
-  logical_and, isinf, meshgrid, ones, repeat, reshape, round, sqrt, stack, tile, where, \
+from numpy import any, argmax, argmin, argsort, array, concatenate, eye, exp, expand_dims, hstack, \
+  linspace, logical_and, isinf, meshgrid, ones, repeat, reshape, round, sqrt, stack, tile, where, \
   unravel_index, vstack, zeros
 # self
 from hand_descriptor import HandDescriptor
@@ -21,12 +21,6 @@ class RlAgentLevel2(RlAgentLevel):
     '''Initializes agent in the given environment.'''
 
     RlAgentLevel.__init__(self, level, params)
-
-    # other internal variables
-    self.imW = params["imW"]
-    self.imD = params["imD"]
-    self.selW = 0.0225
-    self.selD = 0.0225
     
     # initialization
     self.actionsInHandFrame = self.SampleActions()
@@ -52,7 +46,7 @@ class RlAgentLevel2(RlAgentLevel):
     
     # generate input image
     targImage = prevDesc.GenerateHeightmap(rlEnv)
-    handImage = zeros((self.imP, self.imP, 0)) if hand is None else hand.image
+    handImage = zeros((self.imP, self.imP, 0), dtype='float32') if hand is None else hand.image
     o = concatenate((targImage, handImage), axis = 2)
     
     # decide which location in the image to zoom into
@@ -61,7 +55,7 @@ class RlAgentLevel2(RlAgentLevel):
     # compose result
     T = copy(prevDesc.T)
     T[0:3, 3] = self.actionsInHandFrame[bestIdx] + prevDesc.center
-    desc = HandDescriptor(T, self.params)
+    desc = HandDescriptor(T, self.imP, self.imDNext, self.imWNext)
     a = bestIdx
 
     return o, a, desc, bestValue, epsilon

@@ -1,4 +1,4 @@
-'''Class and utilities for one level of a HSENS agent.'''
+'''Class and utilities for one level of an HSA agent.'''
 
 # python
 import os
@@ -20,7 +20,6 @@ from tensorflow import keras
 # openrave
 import openravepy
 # self
-from hand_descriptor import HandDescriptor
 
 # AGENT ============================================================================================
 
@@ -60,8 +59,8 @@ class RlAgentLevel():
       self.experiences.append([])
       self.Q.append(self.GenerateNetworkModel(i == 0))
       shape = []
-      for j in xrange(1, len(self.Q[i].outputs[0].shape)):
-        shape.append(int(self.Q[i].outputs[0].shape[j]))
+      for j in xrange(1, len(self.Q[i][1].outputs[0].shape)):
+        shape.append(int(self.Q[i][1].outputs[0].shape[j]))
       self.outputShape.append(tuple(shape))
       typeString = "Grasp" if i == 0 else "Place"
       print("{} level {} has {} outputs.".format(typeString, self.level, self.outputShape[i]))
@@ -89,7 +88,7 @@ class RlAgentLevel():
     idx = 0 if self.IsGraspImage(image) else 1
     dummyIn = zeros((1, 1, 2), dtype='int32') if self.IsOrientationLevel() else \
       zeros((1, 1, 4), dtype='int32')
-    values, dummyOut = self.Q[idx].predict([array([image]), dummyIn])
+    values = self.Q[idx][1].predict([array([image]), dummyIn])
     return squeeze(values)
 
   def GenerateNetworkModel(self, graspNetwork):
@@ -131,7 +130,8 @@ class RlAgentLevel():
         kernel_regularizer=keras.regularizers.l2(weightDecay))(h1)
     h2 = keras.layers.Lambda(lambda inputs: \
       tensorflow.gather_nd(inputs[0], inputs[1]))([h1, in2])
-    Q = keras.Model(inputs=[in1, in2], outputs=[h1, h2])
+    Qtrain = keras.Model(inputs=[in1, in2], outputs=h2)
+    Qtest = keras.Model(inputs=[in1, in2], outputs=h1)
 
     # optimization
 
@@ -144,13 +144,13 @@ class RlAgentLevel():
     else:
       raise Exception("Unsupported optimizer {}.".format(optimizer))
 
-    Q.compile(optimizer=optimizer, loss=[None, "MSE"], loss_weights=[None, 1.0], metrics=[])
+    Qtrain.compile(optimizer=optimizer, loss="MSE")
     
     #typeString = "grasp" if graspNetwork else "place"
     #print("Summary of {} Q-function for level {}:".format(typeString, self.level))
-    #Q.summary()
+    #Qtrain.summary()
     
-    return Q
+    return Qtrain, Qtest
 
   def GetNumberOfExperiences(self):
     '''Returns the number of entries in the experience replay database currently in memory at this level.'''
@@ -205,8 +205,8 @@ class RlAgentLevel():
     for i in xrange(2):
       
       # compute value estimates of next state-action
-      input1G = []; input2G = []; idxG = []; batchIdxG = 0
-      input1P = []; input2P = []; idxP = []; batchIdxP = 0
+      input1G = []; input2G = []; idxG = []
+      input1P = []; input2P = []; idxP = []
       for j, d in enumerate(self.experiences[i]):
         oo = d[3]
         if oo is None: continue # terminal state, value is 0
@@ -215,20 +215,18 @@ class RlAgentLevel():
           input1G.append(oo)
           input2G.append(index)
           idxG.append(j)
-          batchIdxG += 1
         else:
           input1P.append(oo)
           input2P.append(index)
           idxP.append(j)
-          batchIdxP += 1
       
       values = zeros(len(self.experiences[i]))
-      if batchIdxG > 0:
-        valuesG, _ = self.Q[0].predict([array(input1G), array(input2G)], batch_size=batchIdxG)
+      if len(input1G) > 0:
+        valuesG = self.Q[0][1].predict_on_batch([array(input1G), array(input2G)])
         for j in xrange(valuesG.shape[0]):
           values[idxG[j]] = max(valuesG[j])
-      if batchIdxP > 0:
-        valuesP, _ = self.Q[1].predict([array(input1P), array(input2P)], batch_size=batchIdxP)
+      if len(input1P) > 0:
+        valuesP = self.Q[1][1].predict_on_batch([array(input1P), array(input2P)])
         for j in xrange(valuesP.shape[0]):
           values[idxP[j]] = max(valuesP[j])
       
@@ -281,11 +279,11 @@ class RlAgentLevel():
       
       values = zeros(len(self.experiences[i]))
       if batchIdxG > 0:
-        _, valuesG = self.Q[0].predict([array(input1G), array(input2G)], batch_size=batchIdxG)
-        values[idxG] = valuesG.flatten()
+        valuesG = self.Q[0][0].predict_on_batch([array(input1G), array(input2G)])
+        values[idxG] = valuesG.numpy().flatten()
       if batchIdxP > 0:
-        _, valuesP = self.Q[1].predict([array(input1P), array(input2P)], batch_size=batchIdxP)
-        values[idxP] = valuesP.flatten()
+        valuesP = self.Q[1][0].predict_on_batch([array(input1P), array(input2P)])
+        values[idxP] = valuesP.numpy().flatten()
       
       # compute value estimate for current state-action and format data for training
       input1 = []; input2 = []; lbl = []
@@ -313,13 +311,12 @@ class RlAgentLevel():
   def LoadQFunction(self):
     '''Loads the network model and weights from the specified file name.'''
     
-    directory = os.getcwd() + "/tensorflow/models"
+    directory = os.getcwd() + "/tensorflow/models/"
     
-    self.Q = []
     for i in xrange(2):
       act = "grasp" if i == 0 else "place"
-      path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-      self.Q.append(keras.models.load_model(path))
+      path = directory + "q_level_" + str(self.level) + "_" + act + ".h5"
+      self.Q[i][0].load_weights(path)
       print("Loaded Q-function " + path + ".")
 
   def PlotImages(self, o, a, desc):
@@ -505,14 +502,14 @@ class RlAgentLevel():
   def SaveQFunction(self):
     '''Saves the network model and weights to file.'''
 
-    directory = os.getcwd() + "/tensorflow/models"
+    directory = os.getcwd() + "/tensorflow/models/"
     if not os.path.isdir(directory):
       os.makedirs(directory)
       
     for i in xrange(2):
       act = "grasp" if i == 0 else "place"
-      path = directory + "/q_level_" + str(self.level) + "_" + act + ".h5"
-      self.Q[i].save(path)
+      path = directory + "q_level_" + str(self.level) + "_" + act + ".h5"
+      self.Q[i][0].save_weights(path)
       print("Saved Q-function " + path + ".")
 
   def SelectIndexEpsilonGreedy(self, image, unbias):
@@ -567,7 +564,7 @@ class RlAgentLevel():
       for j in xrange(inputs2[i].shape[0]):
         inputs2[i][j, 0, 0] = j % self.batchSize
       # fit
-      history = self.Q[i].fit([inputs1[i], inputs2[i]], labels[i], \
+      history = self.Q[i][0].fit([inputs1[i], inputs2[i]], labels[i], \
         epochs=self.nEpochs, batch_size=self.batchSize, shuffle=False)
       # accumulate loss
       nBatches = floor(labels[i].shape[0] / self.batchSize)

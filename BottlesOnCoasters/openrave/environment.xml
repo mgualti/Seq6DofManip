@@ -41,8 +41,8 @@
       <Translation>0 0 0</Translation>
       <Geom type="box">
         <extents>2.5 2.5 0.005</extents>
-        <translation>0 0 -0.005</translation>
-        <diffuseColor>.6 .6 .6</diffuseColor>
+        <translation>0 0 0</translation>
+        <diffuseColor>0.6 0.6 0.6</diffuseColor>
       	<ambientColor>0.6 0.6 0.6</ambientColor>
       </Geom>
     </Body>

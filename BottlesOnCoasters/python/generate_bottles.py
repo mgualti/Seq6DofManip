@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 '''Generates mesh files and point clouds for randomly selected bottles from 3DNet.'''
 
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-
 # python
 import time
 # scipy

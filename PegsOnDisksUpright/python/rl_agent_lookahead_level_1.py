@@ -1,4 +1,4 @@
-'''One sense level of the hierarchical sampling agent.'''
+'''One sense level of the lookahead HSA agent.'''
 
 # python
 from copy import copy
@@ -22,12 +22,6 @@ class RlAgentLookaheadLevel1(RlAgentLookaheadLevel):
 
     RlAgentLookaheadLevel.__init__(self, level, params)
 
-    # other internal variables
-    self.imW = params["imW"]
-    self.imD = params["imD"]
-    self.selW = 0.09
-    self.selD = 0.09
-    
     # initialization
     self.actionsInHandFrame = self.SampleActions()
 
@@ -50,7 +44,7 @@ class RlAgentLookaheadLevel1(RlAgentLookaheadLevel):
   def SenseAndAct(self, hand, prevDesc, t, rlEnv, unbias):
     '''TODO'''
     
-    handImage = zeros((self.imP, self.imP, 0)) if hand is None else hand.image
+    handImage = zeros((self.imP, self.imP, 0), dtype='float32') if hand is None else hand.image
     
     # generate candidate descriptors
     descs = []
@@ -59,7 +53,7 @@ class RlAgentLookaheadLevel1(RlAgentLookaheadLevel):
         for k in xrange(self.actionSpaceSize[2]):
           T = copy(prevDesc.T)
           T[0:3, 3] = self.actionsInHandFrame[(i, j, k)] + prevDesc.center
-          descs.append(HandDescriptor(T, self.params))
+          descs.append(HandDescriptor(T, self.imP, self.imD, self.imW))
 
     # decide which location in the image to zoom into
     bestIdx, bestValue, epsilon = self.SelectIndexEpsilonGreedy(descs, handImage, unbias, rlEnv)

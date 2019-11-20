@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-'''Trains a tabular hierarchical SE(2) sampling (HSE2S) agent in the peg-in-hole domain.'''
+'''Trains a lookahead hierarchical spatial attention (HSA) agent in the tabular pegs on disks domain.'''
 
 # python
 import sys
 from time import time
-from copy import copy, deepcopy
 # scipy
 from scipy.io import loadmat, savemat
 from numpy.random import seed
-from numpy import array, mean
 # self
 from rl_environment import RlEnvironment
-from rl_agent_hvs_limited_sensor import RlAgentHvsLimitedSensor
+from rl_agent_hsa_lookahead import RlAgentHsaLookahead
 
 def Main():
   '''Entrypoint to the program.'''
@@ -25,6 +23,7 @@ def Main():
   unbiasOnEpisode = params["unbiasOnEpisode"]
   epsilon = params["epsilon"]
   loadQFunction = params["loadQFunction"]
+  saveQFunction = params["saveQFunction"]
   saveFileName = params["saveFileName"]
   
   # INITIALIZATION =================================================================================
@@ -33,19 +32,20 @@ def Main():
   seed(randomSeed)
 
   # initialize agent
-  agent = RlAgentHvsLimitedSensor(params)
+  agent = RlAgentHsaLookahead(params)
   
   if loadQFunction:
     agent.LoadQFunction()
   
   # RUN TEST =======================================================================================
   
-  episodeReturn = []; episodeTime = []
+  episodeReturn = []; nPlacedObjects = []; episodeTime = []
 
   for episode in xrange(nEpisodes):
 
     startTime = time()
     episodeReturn.append(0)
+    nPlacedObjects.append(0)
     if episode >= unbiasOnEpisode: epsilon = 0
     
     env = RlEnvironment(params)
@@ -54,23 +54,25 @@ def Main():
     a, i, o = agent.GetActionsAndObservations(s, epsilon)
 
     for t in xrange(tMax):
+      isPlace = env.IsPlace()
       r = env.Transition(a)
+      if isPlace: nPlacedObjects[-1] += r > 0
+      episodeReturn[-1] += r
       ss = env.GetState()
       aa, ii, oo = agent.GetActionsAndObservations(ss, epsilon)
       agent.UpdateQFunction(o, i, r, oo, ii)
       s = ss; a = aa; o = oo; i = ii
-      episodeReturn[-1] += r
 
     print("Episode {}.{} had return {}.".format(realization, episode, episodeReturn[-1]))
     episodeTime.append(time()-startTime)
 
     print("Agent learned {} values.".format(agent.GetQTableSize()))
 
-  saveData = {"episodeReturn":episodeReturn, "episodeTime":episodeTime,
+  saveData = {"nPlacedObjects":nPlacedObjects, "episodeTime":episodeTime,
     "nValuesLearned":agent.GetQTableSize()}
   saveData.update(params)
   savemat(saveFileName, saveData)
-  agent.SaveQFunction()
+  if saveQFunction: agent.SaveQFunction()
 
 if __name__ == "__main__":
   

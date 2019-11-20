@@ -1,12 +1,9 @@
-'''Reinforcement learning (RL) environment for the tabular pegs-on-disks domain.'''
+'''Reinforcement learning (RL) environment for the tabular pegs on disks domain.'''
 
 # python
-from copy import deepcopy, copy
-from time import sleep, time
 # scipy
-from matplotlib import pyplot
-from numpy.random import choice, randint, randn, shuffle, uniform
-from numpy import arange, array, delete, dot, eye, hstack, stack, unravel_index, where, zeros
+from numpy.random import choice
+from numpy import arange, delete
 
 class RlEnvironment:
 

@@ -1,18 +1,9 @@
-'''Class and utilities for an HSE2S agent. Manages several levels of type RlAgentSenseLevel2d.'''
+'''Class and utilities for an HSA agent. Manages several levels of type RlAgentLevel.'''
 
 # python
 import os
-import shutil
-from copy import copy
-from time import time
 # scipy
-from matplotlib import pyplot
-from numpy.random import choice, permutation, rand, randint
-from numpy import argmax, arange, array, cumsum, exp, fliplr, flipud, logical_not, isinf, mean, \
-  pi, reshape, stack, where, zeros
 # tensorflow
-import tensorflow
-from tensorflow import keras
 # self
 from rl_agent_level_0 import RlAgentLevel0
 from rl_agent_level_1 import RlAgentLevel1
@@ -51,14 +42,6 @@ class RlAgent():
       self.senseAgents.append(RlAgentLevel1(1, params))
     if self.nLevels > 2:
       self.senseAgents.append(RlAgentLevel2(2, params))
-
-    # set up logging
-
-    self.tfLogDir = os.getcwd() + "/tensorflow/logs"
-    if os.path.exists(self.tfLogDir):
-      shutil.rmtree(self.tfLogDir)
-
-    tensorflow.summary.FileWriter(self.tfLogDir, keras.backend.get_session().graph)
 
   def AddExperienceMonteCarlo(self, observations, actions, rewards):
     '''Adds an experience, everything needed for a Monte Carlo update, to the agent's replay database.

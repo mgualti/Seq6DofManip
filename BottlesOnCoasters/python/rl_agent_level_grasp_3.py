@@ -1,4 +1,4 @@
-'''One sense level of the hierarchical sampling agent.'''
+'''One sense level of the HSA agent.'''
 
 # python
 from copy import copy
@@ -54,8 +54,8 @@ class RlAgentLevelGrasp3(RlAgentLevel):
     
     # generate input image
     targImage = prevDesc.GenerateHeightmap(cloud, tableHeight)
-    handImage = zeros((self.imP, self.imP, 0)) if hand is None else hand.image
-    timeImage = zeros((self.imP, self.imP, 0)) if not self.includeTime else \
+    handImage = zeros((self.imP, self.imP, 0), dtype='float32') if hand is None else hand.image
+    timeImage = zeros((self.imP, self.imP, 0), dtype='float32') if not self.includeTime else \
       float(self.tMax - t) / self.tMax * ones((self.imP, self.imP, 1))
     o = concatenate((targImage, handImage, timeImage), axis = 2)
     

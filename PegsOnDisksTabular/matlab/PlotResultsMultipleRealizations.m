@@ -3,7 +3,7 @@ function PlotResultsMultipleRealizations()
     %% Parameters
     
     resultDirs = {'../results-unshaped', '../results-lookahead', '../results-deictic'};
-    resultLegend = {'Standard', 'Lookahead', 'Deictic'};
+    resultLegend = {'Standard HSA (L=4)', 'Lookahead HSA (L=4)', 'Deictic Image Mapping (L=1)'};
     episodeBlock = 1; worstPlotValue = 0; bestPlotValue = 3;
     plotLogScale = true;
 

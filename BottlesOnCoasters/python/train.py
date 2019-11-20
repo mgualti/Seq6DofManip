@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-'''Trains an HVS agent to perform the bottles on coasters task.'''
-
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+'''Trains an HSA agent to perform the bottles on coasters task.'''
 
 # uncomment when profiling
 #import os; os.chdir("/home/mgualti/Seq6DofManip/PickAndPlace")
@@ -40,7 +36,7 @@ def Main():
 
   # set random seeds
   seed(randomSeed)
-  tensorflow.set_random_seed(randomSeed)
+  tensorflow.random.set_seed(randomSeed)
 
   # initialize agent and environment
   rlEnv = RlEnvironmentBottlesOnCoasters(params)

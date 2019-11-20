@@ -1,4 +1,4 @@
-'''Reinforcement learning (RL) environment for the mugs-on-coasters domain.'''
+'''Reinforcement learning (RL) environment for the upright pegs on disks domain.'''
 
 # python
 import os

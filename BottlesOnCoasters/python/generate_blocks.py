@@ -6,8 +6,7 @@ import time
 # scipy
 from scipy.io import savemat
 from numpy.random import seed
-from scipy.spatial import cKDTree
-from numpy import array, isnan, logical_not, logical_or, max, mean, min, sum, where
+from numpy import array, max, min
 # self
 import point_cloud
 from rl_environment import RlEnvironment
@@ -24,14 +23,13 @@ def main():
   removeTable = True
   
   # objects
-  objectHeight = [0.005, 0.020]
-  objectRadius = [0.040, 0.060]
+  objectExtents = [0.01, 0.04]
   nObjects = 1000
 
   # view
-  viewCenter = array([0,0,0])
+  viewCenter = array([0, 0, 0])
   viewKeepout = 0.60
-  viewWorkspace = [(-1.0,1.0),(-1.0,1.0),(-1.0,1.0)]
+  viewWorkspace = [(-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)]
   voxelSize = 0.002
 
   # visualization/saving
@@ -50,8 +48,8 @@ def main():
   for objIdx in xrange(nObjects):
     
     # Generate mesh, save mesh, and get points.
-    objectName = "coaster-{}".format(objIdx)
-    obj = rlEnv.GenerateCylinderMesh(objectHeight, objectRadius, objectName)
+    objectName = "block-{}".format(objIdx)
+    obj = rlEnv.GenerateBoxMesh(objectExtents[0], objectExtents[1], objectName)
     cloud = rlEnv.GetFullCloud(viewCenter, viewKeepout, viewWorkspace,
       add45DegViews=False, computeNormals=False, voxelSize=voxelSize)
       
@@ -61,7 +59,7 @@ def main():
                        [min(cloud[:, 2]), max(cloud[:, 2])]])
 
     # Save metadata.
-    data = {"cloud":cloud, "workspace":workspace, "height":obj.height, "radius":obj.radius}
+    data = {"cloud":cloud, "workspace":workspace}
     savemat(objectName + ".mat", data)
     
     # Optional visualization for debugging.

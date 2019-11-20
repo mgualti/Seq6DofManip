@@ -1,14 +1,12 @@
 #!/usr/bin/env python
-'''Trains a tabular hierarchical SE(2) sampling (HSE2S) agent in the peg-in-hole domain.'''
+'''Trains a Deictic Image Mapping agent in the tabular pegs on disks domain.'''
 
 # python
 import sys
 from time import time
-from copy import copy, deepcopy
 # scipy
 from scipy.io import loadmat, savemat
 from numpy.random import seed
-from numpy import array, mean
 # self
 from rl_environment import RlEnvironment
 from rl_agent_deictic import RlAgentDeictic

@@ -1,23 +1,23 @@
-function PlotResultsMultipleRealizations()
+function CompareResultsMultipleRealizations()
 
     %% Parameters
     
-    %resultDirs = {'../results-3Levels','../results-2Levels','../results-1Levels'};
-    resultDirs = {'../results-standard', '../results-lookahead'};
-    %resultDirs = {'../results-medium', '../results-small', '../results-large'};
-    %resultLegend = {'3 Levels', '2 Levels', '1 Level'};
-    resultLegend = {'Standard', 'Lookahead'};
-    %resultLegend = {'Medium', 'Small', 'Large'};
+    resultDirs = {'../results-no-clutter','../results-clutter'};
+    resultLegend = {'No Distractors', 'Distractors'};
     episodeBlock = 1000; worstReturn = 0; bestReturn = 4;
+    
+    saveFilePrefix = '2019-01-24';
+    saveFilePostfixes = {'AverageReturn'};
+    figsToSave = [];
 
     %% Load
 
-    close('all'); clc();
+    close('all');
     figs = [];
     
     data = cell(1, length(resultDirs));
     for idx=1:length(resultDirs)
-        resultFiles = dir([resultDirs{idx} '/results-*.mat']);
+        resultFiles = dir([resultDirs{idx} '/*.mat']);
         data{idx} = cell(1, length(resultFiles));
         for jdx=1:length(resultFiles)
             name = resultFiles(jdx).name(1:end-4);
@@ -83,31 +83,10 @@ function PlotResultsMultipleRealizations()
         legend('boxoff');
     end
     
-    %% Display times and returns
+    %% Saving Images
     
-    for idx=1:length(resultDirs)
-        
-        nRealizations = length(data{idx});
-        
-        unbiasedSumOfRewards = [];
-        finalSumOfRewards = [];
-        totalTime = [];
-        
-        for jdx=1:nRealizations
-            unbiasedSumOfRewards = [unbiasedSumOfRewards, ...
-                data{idx}{jdx}.episodeReturn(data{idx}{jdx}.unbiasOnEpisode:end)];
-            finalSumOfRewards = [finalSumOfRewards, ...
-                data{idx}{jdx}.episodeReturn(end-data{idx}{jdx}.trainEvery+1:end)];
-            totalTime = [totalTime, sum(data{idx}{jdx}.episodeTime)];
-        end
-        
-        disp([resultLegend{idx}, '---------------------------']);
-        u = mean(unbiasedSumOfRewards); s = std(unbiasedSumOfRewards);
-        disp(['Average unbiased sum of rewards: ' num2str(u) ' -/+ ' num2str(s)]);
-        u = mean(finalSumOfRewards); s = std(finalSumOfRewards);
-        disp(['Average final sum of rewards: ' num2str(u) ' -/+ ' num2str(s)]);
-        u = mean(totalTime / 3600); s = std(totalTime / 3600);
-        disp(['Average simulation time ' num2str(u) ' hours -/+ ' num2str(s)]);
-        
+    for idx=1:length(figsToSave)
+        saveas(figs(figsToSave(idx)), ['../../Notebook/figures-4/' ...
+            saveFilePrefix '-' saveFilePostfixes{figsToSave(idx)} '.png']);
     end
     

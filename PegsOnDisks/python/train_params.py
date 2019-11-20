@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-'''Parameters for an Monte Carlo HSE2S agent for the pegs on disks task.'''
-
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+'''Parameters for an Monte Carlo HSA agent for the pegs on disks task.'''
 
 # python
 import os
@@ -68,8 +64,8 @@ def Parameters(realization):
   # objects
   nObjects = 2
   nSupportObjects = 2
-  objectFolder = "/home/mgualti/Data/RaveObjects/Pegs"
-  supportObjectFolder = "/home/mgualti/Data/RaveObjects/Disks"
+  objectFolder = "/home/mgualti/Data/Seq6DofManip/Pegs"
+  supportObjectFolder = "/home/mgualti/Data/Seq6DofManip/Disks"
   placeOrientTolerance = 1 - cos(1.0 * pi / 180.0)
   placeHeightTolerance = [0.02, 0.02]
   rewardCapGrasps = True

@@ -2,7 +2,7 @@ function PlotResultsMultipleRealizations()
 
     %% Parameters
     
-    resultDir = '../results';
+    resultDir = '../results-clutter';
     metricNames = {'nGraspedObjects', 'nPlacedObjects'};
     resultLegend = {'Grasped', 'Placed'};
     episodeBlock = 1000; worstPlotValue = 0; bestPlotValue = 2;

@@ -1,21 +1,17 @@
-'''Class and utilities for one level of a HSENS agent.'''
+'''Class and utilities for one level of a lookahead HSA agent.'''
 
 # python
 import os
 import pickle
 from copy import copy
-from time import time
 # scipy
 from matplotlib import pyplot
-from numpy.random import choice, permutation, rand, randint, shuffle
-from numpy import argmax, arange, array, concatenate, empty, exp, eye, flipud, floor, logical_not, \
-  isinf, max, maximum, mean, min, minimum, ones, pi, repeat, reshape, round, squeeze, sqrt, stack, \
-  sum, unravel_index, where, zeros
+from numpy.random import rand, randint, shuffle
+from numpy import argmax, arange, array, concatenate, floor, maximum, squeeze, stack, sum, zeros
 # tensorflow
 import tensorflow
 from tensorflow import keras
 # self
-from hand_descriptor import HandDescriptor
 
 # AGENT ============================================================================================
 
@@ -40,7 +36,12 @@ class RlAgentLookaheadLevel():
     self.modelFolder = params["modelFolder"]
     self.nEpochs = params["nEpochs"]
     self.batchSize = params["batchSize"]
+    
     self.imP = params["imP"]
+    self.imD = params["imD"][level]
+    self.imW = params["imW"][level]
+    self.selD = params["selD"][level]
+    self.selW = params["selW"][level]
     
     self.nActionSamples = self.actionSpaceSize[0] * self.actionSpaceSize[1] * self.actionSpaceSize[2]
     
@@ -67,7 +68,7 @@ class RlAgentLookaheadLevel():
     '''TODO'''
     
     idx = 0 if self.IsGraspImage(images[0]) else 1
-    values = self.Q[idx].predict([array(images)])
+    values = self.Q[idx].predict_on_batch(array(images))
     return squeeze(values)
 
   def GenerateNetworkModel(self, graspNetwork):
@@ -99,8 +100,12 @@ class RlAgentLookaheadLevel():
       kernel_size=params["conv3KernelSize"][self.level], \
       strides=params["conv3Stride"][self.level], padding="same", activation="relu", \
       kernel_regularizer=keras.regularizers.l2(weightDecay))(h)
-    h = keras.layers.Conv2D(1, kernel_size=params["conv4KernelSize"][self.level], \
-      strides=params["conv4Stride"][self.level], padding="same", \
+    h = keras.layers.Conv2D(params["conv4Outputs"][self.level], \
+      kernel_size=params["conv4KernelSize"][self.level], \
+      strides=params["conv4Stride"][self.level],padding="same", \
+      kernel_regularizer=keras.regularizers.l2(weightDecay))(h)
+    h = keras.layers.Conv2D(1, kernel_size=params["conv5KernelSize"][self.level], \
+      strides=params["conv5Stride"][self.level], padding="same", \
       kernel_regularizer=keras.regularizers.l2(weightDecay))(h)
     Q = keras.Model(inputs=inpt, outputs=h)
 
@@ -117,9 +122,9 @@ class RlAgentLookaheadLevel():
 
     Q.compile(optimizer=optimizer, loss="MSE", metrics=[])
     
-    typeString = "grasp" if graspNetwork else "place"
-    print("Summary of {} Q-function for level {}:".format(typeString, self.level))
-    Q.summary()
+    #typeString = "grasp" if graspNetwork else "place"
+    #print("Summary of {} Q-function for level {}:".format(typeString, self.level))
+    #Q.summary()
     
     return Q
 

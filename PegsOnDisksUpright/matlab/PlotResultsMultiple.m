@@ -2,12 +2,8 @@ function PlotResultsMultiple()
 
     %% Parameters
     
-    resultFiles = dir('../results-*.mat');
+    resultFiles = dir('../results-medium/results-*.mat');
     episodeBlock = 1000; worstReturn = 0; bestReturn = 4;
-    
-    saveFilePrefix = '2019-01-23-B';
-    saveFilePostfixes = {'AverageReturn', 'ReturnStatistics', 'Loss'};
-    figsToSave = [];
 
     %% Load
 
@@ -113,12 +109,5 @@ function PlotResultsMultiple()
     for idx=1:nRealizations
         disp(['Total time for ' resultFileNames{idx} ': ' ...
             num2str(sum(data{idx}.episodeTime) / 3600) ' hours']);
-    end
-    
-    %% Saving Images
-    
-    for idx=1:length(figsToSave)
-        saveas(figs(figsToSave(idx)), ['../../Notebook/figures-4/' ...
-            saveFilePrefix '-' saveFilePostfixes{figsToSave(idx)} '.png']);
     end
     

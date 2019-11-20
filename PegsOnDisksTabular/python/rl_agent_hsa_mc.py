@@ -1,30 +1,21 @@
-'''An HVS agent where the Q-values are updated according to the MC update rule.'''
+'''An HSA agent where Q-values are updated according to the Monte Carlo rule.'''
 
 # python
-import os
-import pickle
-from time import time
-from copy import copy
 # scipy
-from numpy.random import rand, randint
-from numpy import argmax, array, ceil, cos, cross, delete, dot, eye, hstack, log2, nonzero, ones, \
-  pi, ravel_multi_index, sin, tile, vstack, unravel_index, where, zeros
 # drawing
-from matplotlib import pyplot
-from skimage.draw import ellipse_perimeter, line
 # self
-from rl_agent_hvs import RlAgentHvs
+from rl_agent_hsa import RlAgentHsa
 
 # AGENT ============================================================================================
 
-class RlAgentHvsMc(RlAgentHvs):
+class RlAgentHsaMc(RlAgentHsa):
 
   def __init__(self, params):
     '''Initializes the agent with an optimistic policy.
     - Input params: System parameters data structure.
     '''
 
-    RlAgentHvs.__init__(self, params)
+    RlAgentHsa.__init__(self, params)
     
     self.Sums = {}
     self.Counts = {}    
